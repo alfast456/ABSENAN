@@ -67,6 +67,15 @@ class AttendanceController extends Controller
         }
 
         $result = $response->json();
+        
+        // Anti-Spoofing check
+        if (isset($result['is_live']) && !$result['is_live']) {
+            $score = number_format($result['liveness_score'] ?? 0.0, 1);
+            return response()->json([
+                'message' => "Anti-Spoofing: Liveness check failed (score: {$score} < 100.0). Ensure photo is sharp and not a printout/screen."
+            ], 403);
+        }
+
         if (!$result['is_match']) {
             return response()->json(['message' => 'Face does not match.'], 401);
         }
@@ -98,8 +107,11 @@ class AttendanceController extends Controller
     public function history(Request $request)
     {
         $employee = $request->user();
-        // TODO: Return attendance logs for this employee
-        return response()->json(['data' => []]);
+        $logs = \App\Models\AttendanceLog::where('employee_id', $employee->id)
+            ->orderBy('scan_time', 'desc')
+            ->take(30)
+            ->get();
+        return response()->json(['data' => $logs]);
     }
 
     public function submitRequest(Request $request)
@@ -119,6 +131,30 @@ class AttendanceController extends Controller
         return response()->json([
             'message' => 'Request submitted successfully',
             'data' => $attendanceRequest
+        ]);
+    }
+
+    public function requests(Request $request)
+    {
+        $employee = $request->user();
+        $requests = \App\Models\AttendanceRequest::where('employee_id', $employee->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'data' => $requests
+        ]);
+    }
+
+    public function payroll(Request $request)
+    {
+        $employee = $request->user();
+        $payrolls = \App\Models\Payroll::where('employee_id', $employee->id)
+            ->orderBy('month', 'desc')
+            ->get();
+
+        return response()->json([
+            'data' => $payrolls
         ]);
     }
 }

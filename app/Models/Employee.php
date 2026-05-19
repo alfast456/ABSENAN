@@ -17,9 +17,15 @@ class Employee extends Authenticatable
         'department_id',
         'shift_group_id',
         'status',
+        'base_salary',
     ];
 
     protected $hidden = [
         'password',
     ];
+
+    public function payrolls()
+    {
+        return $this->hasMany(Payroll::class);
+    }
 }

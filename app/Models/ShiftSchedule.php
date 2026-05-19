@@ -6,5 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShiftSchedule extends Model
 {
-    //
+    protected $fillable = [
+        'employee_id',
+        'shift_id',
+        'work_date',
+    ];
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
 }

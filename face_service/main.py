@@ -19,6 +19,14 @@ def read_imagefile(file) -> np.ndarray:
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     return img
 
+def check_liveness(img: np.ndarray, threshold: float = 100.0):
+    # Convert image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Calculate Laplacian variance (focus measure)
+    variance = cv2.Laplacian(gray, cv2.CV_64F).var()
+    is_live = bool(variance >= threshold)
+    return float(variance), is_live
+
 @app.get("/")
 def read_root():
     return {"status": "Face Service is running", "model": model_name}
@@ -29,8 +37,12 @@ async def register_face(photo: UploadFile = File(...)):
         contents = await photo.read()
         img = read_imagefile(contents)
 
+        # Liveness check
+        liveness_score, is_live = check_liveness(img)
+        if not is_live:
+            raise HTTPException(status_code=400, detail=f"Anti-Spoofing: Liveness check failed (score: {liveness_score:.1f} < 100.0). Ensure photo is sharp and not a printout/screen.")
+
         # Get embeddings
-        # DeepFace.represent returns a list of dictionaries (one for each face detected)
         result = DeepFace.represent(img_path=img, model_name=model_name, enforce_detection=True)
         
         if len(result) == 0:
@@ -42,9 +54,13 @@ async def register_face(photo: UploadFile = File(...)):
         
         return JSONResponse(content={
             "status": "success",
-            "embedding": embedding
+            "embedding": embedding,
+            "liveness_score": liveness_score,
+            "is_live": is_live
         })
 
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -57,6 +73,9 @@ async def verify_face(
         contents = await photo.read()
         img = read_imagefile(contents)
         
+        # Liveness check
+        liveness_score, is_live = check_liveness(img)
+
         # Parse stored embedding back to list
         known_embedding = json.loads(stored_embedding)
 
@@ -77,7 +96,6 @@ async def verify_face(
 
         distance = cosine_metric(np.array(known_embedding), np.array(current_embedding))
         
-        # Facenet threshold is around 0.40 for cosine metric (varies by paper, DeepFace uses 0.40)
         threshold = 0.40
         is_match = bool(distance <= threshold)
 
@@ -85,13 +103,16 @@ async def verify_face(
             "status": "success",
             "is_match": is_match,
             "distance": float(distance),
-            "threshold": threshold
+            "threshold": threshold,
+            "liveness_score": liveness_score,
+            "is_live": is_live
         })
 
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    # pyrefly: ignore [missing-import]
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
