@@ -119,12 +119,28 @@ class AttendanceController extends Controller
         $request->validate([
             'request_type' => 'required|in:leave,sick,permission',
             'description' => 'required|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
+        $employee = $request->user();
+
+        // Validasi kuota khusus cuti tahunan
+        if ($request->request_type === 'leave' && $request->start_date && $request->end_date) {
+            $days = \Carbon\Carbon::parse($request->start_date)->diffInDays(\Carbon\Carbon::parse($request->end_date)) + 1;
+            if ($employee->annual_leave_quota < $days) {
+                return response()->json([
+                    'message' => "Sisa kuota cuti Anda tidak mencukupi. Sisa: {$employee->annual_leave_quota} hari."
+                ], 400);
+            }
+        }
+
         $attendanceRequest = \App\Models\AttendanceRequest::create([
-            'employee_id' => $request->user()->id,
+            'employee_id' => $employee->id,
             'request_type' => $request->request_type,
             'description' => $request->description,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
             'status' => 'pending',
         ]);
 

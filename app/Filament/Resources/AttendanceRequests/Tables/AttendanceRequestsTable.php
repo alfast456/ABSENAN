@@ -14,15 +14,38 @@ class AttendanceRequestsTable
     {
         return $table
             ->columns([
-                TextColumn::make('employee_id')
-                    ->numeric()
+                TextColumn::make('employee.name')
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('request_type')
-                    ->searchable(),
+                    ->searchable()
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'leave' => 'warning',
+                        'sick' => 'danger',
+                        'permission' => 'info',
+                    }),
+                TextColumn::make('description')
+                    ->label('Reason')
+                    ->searchable()
+                    ->limit(30)
+                    ->wrap(),
+                TextColumn::make('start_date')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('end_date')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('status')
-                    ->searchable(),
-                TextColumn::make('approved_by')
-                    ->numeric()
+                    ->searchable()
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                    }),
+                TextColumn::make('approver.name')
+                    ->label('Approved By')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()

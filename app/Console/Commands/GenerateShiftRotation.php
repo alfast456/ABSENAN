@@ -25,9 +25,46 @@ class GenerateShiftRotation extends Command
      */
     public function handle()
     {
-        $this->info('Starting shift generation...');
-        // TODO: Implement actual shift logic here.
-        // E.g., looping through employees and assigning shifts for the next month based on shift_group_id.
-        $this->info('Shift generation completed.');
+        $this->info('Starting smart shift generation for the next 7 days...');
+
+        $employees = \App\Models\Employee::all();
+        $shifts = \App\Models\Shift::all();
+
+        if ($shifts->isEmpty()) {
+            $this->error('No shifts found in the database. Please create shifts first.');
+            return;
+        }
+
+        $startDate = now()->startOfWeek(); // Start from this Monday
+        $weeksFromEpoch = $startDate->diffInWeeks(now()->startOfYear()); // Get week number
+
+        $daysToGenerate = 7; // Seminggu
+
+        foreach ($employees as $employee) {
+            $groupString = $employee->shift_group_id ?: 'Default';
+            $groupId = crc32($groupString); // Convert string to integer for math operations
+            
+            // Logika Rotasi Mingguan:
+            // Shift index ditentukan oleh (Minggu ke berapa + Hash ID Grup) % Total Shift
+            // Sehingga setiap minggu, shift karyawan di grup tersebut akan berputar.
+            $shiftIndex = (int)($weeksFromEpoch + $groupId) % $shifts->count();
+            $assignedShift = $shifts->values()->get($shiftIndex);
+
+            for ($i = 0; $i < $daysToGenerate; $i++) {
+                $workDate = $startDate->copy()->addDays($i)->format('Y-m-d');
+
+                \App\Models\ShiftSchedule::updateOrCreate(
+                    [
+                        'employee_id' => $employee->id,
+                        'work_date' => $workDate,
+                    ],
+                    [
+                        'shift_id' => $assignedShift->id,
+                    ]
+                );
+            }
+        }
+
+        $this->info('Smart shift generation completed successfully!');
     }
 }

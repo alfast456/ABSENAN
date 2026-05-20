@@ -18,10 +18,15 @@ class Employee extends Authenticatable
         'shift_group_id',
         'status',
         'base_salary',
+        'annual_leave_quota',
     ];
 
     protected $hidden = [
         'password',
+    ];
+
+    protected $casts = [
+        'password' => 'hashed',
     ];
 
     public function payrolls()

@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export const AuthContext = createContext();
 
-export const API_BASE_URL = 'http://192.168.1.4:8000/api';
+export const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,10 +20,10 @@ export const AuthProvider = ({ children }) => {
       });
 
       const { token, employee } = response.data;
-      
+
       await SecureStore.setItemAsync('userToken', token);
       await SecureStore.setItemAsync('userData', JSON.stringify(employee));
-      
+
       setUserToken(token);
       setUser(employee);
       return { success: true };
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       let token = await SecureStore.getItemAsync('userToken');
       let userData = await SecureStore.getItemAsync('userData');
-      
+
       if (token && userData) {
         setUserToken(token);
         setUser(JSON.parse(userData));

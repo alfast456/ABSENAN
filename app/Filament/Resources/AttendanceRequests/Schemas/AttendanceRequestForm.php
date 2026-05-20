@@ -12,19 +12,35 @@ class AttendanceRequestForm
     {
         return $schema
             ->components([
-                TextInput::make('employee_id')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('request_type')
+                \Filament\Forms\Components\Select::make('employee_id')
+                    ->relationship('employee', 'name')
+                    ->searchable()
+                    ->required(),
+                \Filament\Forms\Components\Select::make('request_type')
+                    ->options([
+                        'leave' => 'Cuti',
+                        'sick' => 'Sakit',
+                        'permission' => 'Izin',
+                    ])
                     ->required(),
                 Textarea::make('description')
                     ->required()
                     ->columnSpanFull(),
-                TextInput::make('status')
+                \Filament\Forms\Components\DatePicker::make('start_date')
+                    ->required(),
+                \Filament\Forms\Components\DatePicker::make('end_date')
+                    ->required(),
+                \Filament\Forms\Components\Select::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
                     ->required()
                     ->default('pending'),
-                TextInput::make('approved_by')
-                    ->numeric(),
+                \Filament\Forms\Components\Select::make('approved_by')
+                    ->relationship('approver', 'name')
+                    ->searchable(),
             ]);
     }
 }

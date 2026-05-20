@@ -185,6 +185,17 @@ export default function DashboardScreen() {
               </View>
               <Text style={styles.menuItemText}>Payslip</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.menuItemCard} 
+              onPress={() => navigation.navigate('RegisterFace')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBg, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                <Ionicons name="scan-circle" size={22} color="#F59E0B" />
+              </View>
+              <Text style={styles.menuItemText}>Register</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

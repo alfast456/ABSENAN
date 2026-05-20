@@ -27,6 +27,12 @@ class EmployeeForm
                 TextInput::make('status')
                     ->required()
                     ->default('active'),
+                TextInput::make('base_salary')
+                    ->numeric()
+                    ->default(0),
+                TextInput::make('annual_leave_quota')
+                    ->numeric()
+                    ->default(12),
             ]);
     }
 }

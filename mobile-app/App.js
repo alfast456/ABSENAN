@@ -11,6 +11,7 @@ import AttendanceScreen from './src/screens/AttendanceScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import RequestScreen from './src/screens/RequestScreen';
 import PayrollScreen from './src/screens/PayrollScreen';
+import RegisterFaceScreen from './src/screens/RegisterFaceScreen';
 
 const Stack = createStackNavigator();
 
@@ -81,6 +82,14 @@ const AppContent = () => {
               name="Payroll" 
               component={PayrollScreen} 
               options={{ title: 'Monthly Payslip' }}
+            />
+            <Stack.Screen 
+              name="RegisterFace" 
+              component={RegisterFaceScreen} 
+              options={{ 
+                title: 'Register Face',
+                headerBackTitleVisible: false,
+              }}
             />
           </>
         )}

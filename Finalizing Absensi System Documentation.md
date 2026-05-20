@@ -1422,10 +1422,10 @@ Cara alternatif lain, cek IP laptop dulu:
 
 ### Planner Response
 
-IP laptop Anda adalah `192.168.1.4`. Pastikan HP terhubung ke **WiFi yang sama** dengan laptop, lalu di aplikasi **Expo Go**:
+IP laptop Anda adalah `172.23.39.117`. Pastikan HP terhubung ke **WiFi yang sama** dengan laptop, lalu di aplikasi **Expo Go**:
 
 1. Tap **"Enter URL manually"**
-2. Masukkan: `exp://192.168.1.4:8082`
+2. Masukkan: `exp://172.23.39.117:8082`
 
 Dan jalankan Expo tanpa tunnel:
 ```bash

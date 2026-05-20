@@ -1,7 +1,8 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, FlatList, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, FlatList, Keyboard, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { AuthContext, API_BASE_URL } from '../context/AuthContext';
 
@@ -10,6 +11,10 @@ export default function RequestScreen() {
   
   const [requestType, setRequestType] = useState('permission');
   const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [history, setHistory] = useState([]);
   const [fetchingHistory, setFetchingHistory] = useState(true);
@@ -24,6 +29,22 @@ export default function RequestScreen() {
       console.log('Error fetching requests history:', error);
     } finally {
       setFetchingHistory(false);
+    }
+  };
+
+  const onStartDateChange = (event, selectedDate) => {
+    setShowStartPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const formatted = selectedDate.toISOString().split('T')[0];
+      setStartDate(formatted);
+    }
+  };
+
+  const onEndDateChange = (event, selectedDate) => {
+    setShowEndPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const formatted = selectedDate.toISOString().split('T')[0];
+      setEndDate(formatted);
     }
   };
 
@@ -44,12 +65,16 @@ export default function RequestScreen() {
       await axios.post(`${API_BASE_URL}/attendance/request`, {
         request_type: requestType,
         description: description,
+        start_date: startDate || null,
+        end_date: endDate || null,
       }, {
         headers: { Authorization: `Bearer ${userToken}` }
       });
 
       Alert.alert('Success', 'Your permission request has been submitted successfully.');
       setDescription('');
+      setStartDate('');
+      setEndDate('');
       fetchRequestHistory(); // reload history
     } catch (error) {
       console.log('Error submitting request:', error);
@@ -92,7 +117,12 @@ export default function RequestScreen() {
           </View>
         </View>
         <Text style={styles.historyDescription} numberOfLines={2}>{item.description}</Text>
-        <Text style={styles.historyDate}>{date}</Text>
+        {item.start_date && item.end_date && (
+          <Text style={styles.historyDates}>
+            {item.start_date} s/d {item.end_date}
+          </Text>
+        )}
+        <Text style={styles.historyDate}>Dibuat pada: {date}</Text>
       </View>
     );
   };
@@ -135,6 +165,49 @@ export default function RequestScreen() {
                 <Ionicons name="briefcase-outline" size={20} color={requestType === 'leave' ? '#0F172A' : '#94A3B8'} />
                 <Text style={[styles.selectorText, requestType === 'leave' ? styles.selectorTextActive : null]}>Cuti</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Date Inputs */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={styles.inputLabel}>Start Date</Text>
+                <TouchableOpacity 
+                  style={styles.datePickerBtn}
+                  onPress={() => setShowStartPicker(true)}
+                >
+                  <Text style={[styles.dateText, !startDate && { color: '#475569' }]}>
+                    {startDate || 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
+                {showStartPicker && (
+                  <DateTimePicker
+                    value={startDate ? new Date(startDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={onStartDateChange}
+                  />
+                )}
+              </View>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <Text style={styles.inputLabel}>End Date</Text>
+                <TouchableOpacity 
+                  style={styles.datePickerBtn}
+                  onPress={() => setShowEndPicker(true)}
+                >
+                  <Text style={[styles.dateText, !endDate && { color: '#475569' }]}>
+                    {endDate || 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
+                {showEndPicker && (
+                  <DateTimePicker
+                    value={endDate ? new Date(endDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    minimumDate={startDate ? new Date(startDate) : undefined}
+                    onChange={onEndDateChange}
+                  />
+                )}
+              </View>
             </View>
 
             {/* Description Text Input */}
@@ -242,6 +315,28 @@ const styles = StyleSheet.create({
   selectorTextActive: {
     color: '#0F172A',
   },
+  textInput: {
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    color: '#F8FAFC',
+    padding: 12,
+    fontSize: 14,
+  },
+  datePickerBtn: {
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    padding: 12,
+    height: 48,
+    justifyContent: 'center',
+  },
+  dateText: {
+    color: '#F8FAFC',
+    fontSize: 14,
+  },
   textAreaInput: {
     backgroundColor: '#1E293B',
     borderRadius: 8,
@@ -317,6 +412,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 8,
+  },
+  historyDates: {
+    color: '#F59E0B',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
   },
   historyDate: {
     color: '#64748B',

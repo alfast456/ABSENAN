@@ -65,6 +65,8 @@ class PayrollsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    \Filament\Actions\ExportBulkAction::make()
+                        ->exporter(\App\Filament\Exports\PayrollExporter::class),
                 ]),
             ]);
     }
