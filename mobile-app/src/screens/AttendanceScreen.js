@@ -7,11 +7,13 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 
 import { AuthContext, API_BASE_URL } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function AttendanceScreen() {
   const { userToken } = useContext(AuthContext);
+  const { theme, themeColors, isDarkMode } = useContext(ThemeContext);
   const route = useRoute();
   const navigation = useNavigation();
   const { actionType } = route.params; // 'checkin' or 'checkout'
@@ -44,19 +46,19 @@ export default function AttendanceScreen() {
 
   if (!permission || locationPermission === null) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#F59E0B" />
-        <Text style={styles.statusText}>Requesting permissions...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={[styles.statusText, { color: theme.textSecondary }]}>Requesting permissions...</Text>
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="camera-off-outline" size={48} color="#EF4444" />
-        <Text style={styles.errorText}>Camera permission is required.</Text>
-        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+        <Ionicons name="camera-off-outline" size={48} color={theme.danger} />
+        <Text style={[styles.errorText, { color: theme.text }]}>Camera permission is required.</Text>
+        <TouchableOpacity style={[styles.permissionBtn, { backgroundColor: themeColors.primary }]} onPress={requestPermission}>
           <Text style={styles.permissionBtnText}>Grant Permission</Text>
         </TouchableOpacity>
       </View>
@@ -65,10 +67,10 @@ export default function AttendanceScreen() {
 
   if (!locationPermission) {
     return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="location-outline" size={48} color="#EF4444" />
-        <Text style={styles.errorText}>Location permission is required.</Text>
-        <Text style={styles.errorSubtext}>We need your location to verify you are at the office.</Text>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+        <Ionicons name="location-outline" size={48} color={theme.danger} />
+        <Text style={[styles.errorText, { color: theme.text }]}>Location permission is required.</Text>
+        <Text style={[styles.errorSubtext, { color: theme.textSecondary }]}>We need your location to verify you are at the office.</Text>
       </View>
     );
   }
@@ -84,6 +86,13 @@ export default function AttendanceScreen() {
       const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
+      
+      if (loc.mocked) {
+        setLoading(false);
+        Alert.alert('Security Alert', 'Fake GPS / Mock Location detected! Attendance rejected.');
+        return;
+      }
+      
       setLocation(loc);
 
       setLoadingMsg('Capturing face image...');
@@ -136,21 +145,21 @@ export default function AttendanceScreen() {
 
   if (success) {
     return (
-      <View style={[styles.container, styles.successContainer]}>
-        <Ionicons name="checkmark-circle-outline" size={100} color="#10B981" />
-        <Text style={styles.successTitle}>
+      <View style={[styles.container, styles.successContainer, { backgroundColor: theme.background }]}>
+        <Ionicons name="checkmark-circle-outline" size={100} color={theme.success} />
+        <Text style={[styles.successTitle, { color: theme.text }]}>
           {actionType === 'checkin' ? 'Check In Successful!' : 'Check Out Successful!'}
         </Text>
-        <Text style={styles.successTime}>
+        <Text style={[styles.successTime, { color: theme.success }]}>
           {successData ? new Date(successData.scan_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
         </Text>
-        <Text style={styles.successSub}>Thank you. Have a great day!</Text>
+        <Text style={[styles.successSub, { color: theme.textSecondary }]}>Thank you. Have a great day!</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <CameraView 
         style={StyleSheet.absoluteFillObject} 
         facing="front"
@@ -159,8 +168,8 @@ export default function AttendanceScreen() {
         {/* Overlay Graphic with centering target */}
         <View style={styles.overlay}>
           <View style={styles.guideContainer}>
-            <View style={styles.faceOutline} />
-            <Text style={styles.instructionText}>
+            <View style={[styles.faceOutline, { borderColor: themeColors.primary, shadowColor: themeColors.primary }]} />
+            <Text style={[styles.instructionText, { backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.85)', color: theme.text }]}>
               Place your face inside the circle and ensure adequate lighting.
             </Text>
           </View>
@@ -168,14 +177,18 @@ export default function AttendanceScreen() {
           {/* Action Footer */}
           <View style={styles.footer}>
             {loading ? (
-              <View style={styles.loadingSpinnerContainer}>
-                <ActivityIndicator size="large" color="#F59E0B" />
-                <Text style={styles.loadingMsgText}>{loadingMsg}</Text>
+              <View style={[styles.loadingSpinnerContainer, { backgroundColor: theme.card }]}>
+                <ActivityIndicator size="large" color={themeColors.primary} />
+                <Text style={[styles.loadingMsgText, { color: theme.text }]}>{loadingMsg}</Text>
               </View>
             ) : (
-              <TouchableOpacity style={styles.captureBtn} onPress={handleCapture} activeOpacity={0.85}>
-                <View style={styles.captureBtnInner}>
-                  <Ionicons name="scan-outline" size={32} color="#0F172A" />
+              <TouchableOpacity 
+                style={[styles.captureBtn, { backgroundColor: themeColors.primaryLight, borderColor: themeColors.primary }]} 
+                onPress={handleCapture} 
+                activeOpacity={0.85}
+              >
+                <View style={[styles.captureBtnInner, { backgroundColor: themeColors.primary }]}>
+                  <Ionicons name="scan-outline" size={32} color="#FFFFFF" />
                 </View>
               </TouchableOpacity>
             )}
@@ -189,17 +202,14 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   statusText: {
-    color: '#94A3B8',
     fontSize: 14,
     marginTop: 14,
   },
@@ -245,17 +255,18 @@ const styles = StyleSheet.create({
     height: width * 0.7,
     borderRadius: (width * 0.7) / 2,
     borderWidth: 3,
-    borderColor: '#F59E0B',
     borderStyle: 'dashed',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 10,
   },
   instructionText: {
-    color: '#F8FAFC',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 24,
     fontWeight: '600',
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -269,30 +280,30 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(245, 158, 11, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#F59E0B',
   },
   captureBtnInner: {
     width: 66,
     height: 66,
     borderRadius: 33,
-    backgroundColor: '#F59E0B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   loadingSpinnerContainer: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
   },
   loadingMsgText: {
-    color: '#F8FAFC',
     fontSize: 13,
     fontWeight: 'bold',
     marginTop: 12,

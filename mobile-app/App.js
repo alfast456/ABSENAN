@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
+import { ThemeProvider, ThemeContext } from './src/context/ThemeContext';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import AttendanceScreen from './src/screens/AttendanceScreen';
@@ -17,34 +18,39 @@ const Stack = createStackNavigator();
 
 const AppContent = () => {
   const { isLoading, userToken } = useContext(AuthContext);
+  const { theme, isDarkMode, themeColors } = useContext(ThemeContext);
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="light" />
-        <Text style={styles.loadingLogo}>ABSENAN</Text>
-        <ActivityIndicator size="large" color="#F59E0B" style={styles.spinner} />
-        <Text style={styles.loadingText}>Initializing system...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
+        <Text style={[styles.loadingLogo, { color: themeColors.primary }]}>ABSENAN</Text>
+        <ActivityIndicator size="large" color={themeColors.primary} style={styles.spinner} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Initializing system...</Text>
       </View>
     );
   }
 
   return (
     <NavigationContainer>
-      <StatusBar style="light" />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#1E293B', // Slate 800
-            shadowColor: 'transparent',
-            elevation: 0,
+            backgroundColor: themeColors.primary,
+            shadowColor: themeColors.primaryDark,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            elevation: 8,
+            borderBottomWidth: 0,
           },
-          headerTintColor: '#F8FAFC', // Slate 50
+          headerTintColor: '#FFFFFF',
           headerTitleStyle: {
             fontWeight: 'bold',
             letterSpacing: 0.5,
           },
-          cardStyle: { backgroundColor: '#0F172A' }, // Slate 900
+          cardStyle: { backgroundColor: theme.background },
         }}
       >
         {userToken === null ? (
@@ -100,26 +106,26 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   loadingLogo: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: '900',
-    color: '#F8FAFC',
     letterSpacing: 4,
     marginBottom: 20,
-    textShadowColor: 'rgba(245, 158, 11, 0.4)',
+    textShadowColor: 'rgba(25, 194, 243, 0.4)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 10,
   },
@@ -127,7 +133,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   loadingText: {
-    color: '#94A3B8',
     fontSize: 14,
     letterSpacing: 1,
   },

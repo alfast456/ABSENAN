@@ -4,9 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
 import { AuthContext, API_BASE_URL } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function HistoryScreen() {
   const { userToken } = useContext(AuthContext);
+  const { theme, themeColors } = useContext(ThemeContext);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,32 +78,32 @@ export default function HistoryScreen() {
     const isLate = isCheckin && (scanTime.getHours() > 8 || (scanTime.getHours() === 8 && scanTime.getMinutes() > 0));
 
     return (
-      <View style={styles.logCard}>
+      <View style={[styles.logCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={styles.logLeft}>
-          <View style={[styles.iconBg, isCheckin ? styles.checkinIconBg : styles.checkoutIconBg]}>
+          <View style={[styles.iconBg, isCheckin ? { backgroundColor: theme.successLight } : { backgroundColor: themeColors.primaryLight }]}>
             <Ionicons 
               name={isCheckin ? 'enter-outline' : 'exit-outline'} 
               size={20} 
-              color={isCheckin ? '#10B981' : '#F59E0B'} 
+              color={isCheckin ? theme.success : themeColors.primaryDark} 
             />
           </View>
           <View style={styles.logTextContainer}>
-            <Text style={styles.logTitle}>{isCheckin ? 'Check In' : 'Check Out'}</Text>
-            <Text style={styles.logDate}>{formatDate(item.scan_time)}</Text>
+            <Text style={[styles.logTitle, { color: theme.text }]}>{isCheckin ? 'Check In' : 'Check Out'}</Text>
+            <Text style={[styles.logDate, { color: theme.textSecondary }]}>{formatDate(item.scan_time)}</Text>
             {item.distance && (
-              <Text style={styles.logMeta}>Office distance: {Math.round(item.distance)}m</Text>
+              <Text style={[styles.logMeta, { color: theme.textSecondary }]}>Office distance: {Math.round(item.distance)}m</Text>
             )}
           </View>
         </View>
         <View style={styles.logRight}>
-          <Text style={styles.logTime}>{formatTime(item.scan_time)}</Text>
+          <Text style={[styles.logTime, { color: theme.text }]}>{formatTime(item.scan_time)}</Text>
           {isCheckin && isLate ? (
-            <View style={[styles.badge, styles.lateBadge]}>
-              <Text style={styles.lateBadgeText}>LATE</Text>
+            <View style={[styles.badge, { backgroundColor: theme.dangerLight }]}>
+              <Text style={[styles.lateBadgeText, { color: theme.danger }]}>LATE</Text>
             </View>
           ) : (
-            <View style={[styles.badge, styles.validBadge]}>
-              <Text style={styles.validBadgeText}>{item.status}</Text>
+            <View style={[styles.badge, { backgroundColor: theme.successLight }]}>
+              <Text style={[styles.validBadgeText, { color: theme.success }]}>{item.status}</Text>
             </View>
           )}
         </View>
@@ -111,43 +113,43 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#F59E0B" />
-        <Text style={styles.loadingText}>Loading presence logs...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading presence logs...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Stats Cards */}
       <View style={styles.statsRow}>
-        <View style={styles.statsCard}>
-          <Ionicons name="people-outline" size={24} color="#10B981" />
-          <Text style={styles.statsValue}>{stats.presentDays}</Text>
-          <Text style={styles.statsLabel}>Days Present</Text>
+        <View style={[styles.statsCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Ionicons name="people-outline" size={24} color={theme.success} />
+          <Text style={[styles.statsValue, { color: theme.text }]}>{stats.presentDays}</Text>
+          <Text style={[styles.statsLabel, { color: theme.textSecondary }]}>Days Present</Text>
         </View>
-        <View style={styles.statsCard}>
-          <Ionicons name="alert-circle-outline" size={24} color="#EF4444" />
-          <Text style={[styles.statsValue, stats.lateDays > 0 ? styles.textRed : null]}>{stats.lateDays}</Text>
-          <Text style={styles.statsLabel}>Days Late</Text>
+        <View style={[styles.statsCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Ionicons name="alert-circle-outline" size={24} color={theme.danger} />
+          <Text style={[styles.statsValue, { color: theme.text }, stats.lateDays > 0 ? { color: theme.danger } : null]}>{stats.lateDays}</Text>
+          <Text style={[styles.statsLabel, { color: theme.textSecondary }]}>Days Late</Text>
         </View>
       </View>
 
       {/* Logs List */}
-      <Text style={styles.sectionHeader}>Log List (Last 30 days)</Text>
+      <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>Log List (Last 30 days)</Text>
       <FlatList
         data={logs}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderLogItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F59E0B" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.primary} />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={48} color="#475569" />
-            <Text style={styles.emptyText}>No attendance logs recorded yet.</Text>
+            <Ionicons name="calendar-outline" size={48} color={theme.textSecondary} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No attendance logs recorded yet.</Text>
           </View>
         }
       />
@@ -158,17 +160,14 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
     padding: 16,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   loadingText: {
-    color: '#94A3B8',
     fontSize: 14,
     marginTop: 12,
   },
@@ -179,31 +178,23 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     flex: 1,
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginHorizontal: 4,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#334155',
   },
   statsValue: {
-    color: '#F8FAFC',
     fontSize: 22,
     fontWeight: 'bold',
     marginVertical: 4,
   },
   statsLabel: {
-    color: '#64748B',
     fontSize: 11,
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
-  textRed: {
-    color: '#EF4444',
-  },
   sectionHeader: {
-    color: '#94A3B8',
     fontSize: 12,
     fontWeight: 'bold',
     textTransform: 'uppercase',
@@ -218,78 +209,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   logLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-  },
-  checkinIconBg: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
-  checkoutIconBg: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
   },
   logTextContainer: {
     justifyContent: 'center',
   },
   logTitle: {
-    color: '#F8FAFC',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
   },
   logDate: {
-    color: '#94A3B8',
-    fontSize: 11,
+    fontSize: 12,
     marginTop: 2,
   },
   logMeta: {
-    color: '#64748B',
-    fontSize: 10,
+    fontSize: 11,
     marginTop: 2,
   },
   logRight: {
     alignItems: 'flex-end',
   },
   logTime: {
-    color: '#F8FAFC',
     fontSize: 16,
     fontWeight: 'bold',
   },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
     marginTop: 4,
   },
-  validBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
   validBadgeText: {
-    color: '#10B981',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
-  lateBadge: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-  },
   lateBadgeText: {
-    color: '#EF4444',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
@@ -299,7 +270,6 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyText: {
-    color: '#475569',
     fontSize: 14,
     marginTop: 12,
   },

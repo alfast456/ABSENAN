@@ -5,9 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
 import { AuthContext, API_BASE_URL } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function DashboardScreen() {
   const { user, userToken, logout } = useContext(AuthContext);
+  const { theme, themeColors, isDarkMode, toggleTheme } = useContext(ThemeContext);
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
@@ -65,48 +67,53 @@ export default function DashboardScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F59E0B" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.primary} />
         }
       >
         {/* Profile Card */}
-        <View style={styles.profileCard}>
+        <View style={[styles.profileCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.profileInfo}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
+            <View style={[styles.avatar, { backgroundColor: themeColors.primaryLight }]}>
+              <Text style={[styles.avatarText, { color: themeColors.primaryDark }]}>
                 {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EM'}
               </Text>
             </View>
             <View style={styles.profileTextContainer}>
-              <Text style={styles.welcomeText}>Welcome back,</Text>
-              <Text style={styles.nameText}>{user?.name || 'Employee'}</Text>
-              <Text style={styles.codeText}>{user?.employee_code || 'EMP000'}</Text>
+              <Text style={[styles.welcomeText, { color: theme.textSecondary }]}>Welcome back,</Text>
+              <Text style={[styles.nameText, { color: theme.text }]}>{user?.name || 'Employee'}</Text>
+              <Text style={[styles.codeText, { color: themeColors.primary }]}>{user?.employee_code || 'EMP000'}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <Ionicons name="log-out-outline" size={24} color="#F87171" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconButton} onPress={toggleTheme}>
+              <Ionicons name={isDarkMode ? "sunny-outline" : "moon-outline"} size={22} color={theme.iconColor} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={logout}>
+              <Ionicons name="log-out-outline" size={24} color={theme.danger} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Status Card */}
-        <View style={styles.statusCard}>
-          <Text style={styles.cardTitle}>Today's Presence</Text>
-          <Text style={styles.dateText}>{formatDate(new Date())}</Text>
+        <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>Today's Presence</Text>
+          <Text style={[styles.dateText, { color: theme.text }]}>{formatDate(new Date())}</Text>
           
           <View style={styles.statusRow}>
             <View style={styles.statusCol}>
-              <Text style={styles.statusLabel}>Check In</Text>
-              <Text style={[styles.statusTime, todayStatus.checkin ? styles.activeTime : null]}>
+              <Text style={[styles.statusLabel, { color: theme.textSecondary }]}>Check In</Text>
+              <Text style={[styles.statusTime, { color: theme.textSecondary }, todayStatus.checkin && { color: theme.text }]}>
                 {todayStatus.checkin || '--:--'}
               </Text>
             </View>
-            <View style={styles.statusDivider} />
+            <View style={[styles.statusDivider, { backgroundColor: theme.border }]} />
             <View style={styles.statusCol}>
-              <Text style={styles.statusLabel}>Check Out</Text>
-              <Text style={[styles.statusTime, todayStatus.checkout ? styles.activeTime : null]}>
+              <Text style={[styles.statusLabel, { color: theme.textSecondary }]}>Check Out</Text>
+              <Text style={[styles.statusTime, { color: theme.textSecondary }, todayStatus.checkout && { color: theme.text }]}>
                 {todayStatus.checkout || '--:--'}
               </Text>
             </View>
@@ -114,127 +121,132 @@ export default function DashboardScreen() {
 
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={[styles.actionBtn, styles.checkinBtn, todayStatus.checkin ? styles.btnDisabled : null]}
+              style={[
+                styles.actionBtn, 
+                { backgroundColor: theme.successLight },
+                todayStatus.checkin && { backgroundColor: theme.border, opacity: 0.5 }
+              ]}
               onPress={() => navigation.navigate('Attendance', { actionType: 'checkin' })}
               disabled={!!todayStatus.checkin}
               activeOpacity={0.8}
             >
-              <Ionicons name="enter-outline" size={20} color="#0F172A" />
-              <Text style={styles.actionBtnText}>Check In</Text>
+              <Ionicons name="enter-outline" size={20} color={todayStatus.checkin ? theme.textSecondary : theme.success} />
+              <Text style={[styles.actionBtnText, { color: todayStatus.checkin ? theme.textSecondary : theme.success }]}>Check In</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.actionBtn,
-                styles.checkoutBtn,
-                (!todayStatus.checkin || todayStatus.checkout) ? styles.btnDisabled : null
+                { backgroundColor: themeColors.primaryLight },
+                (!todayStatus.checkin || todayStatus.checkout) && { backgroundColor: theme.border, opacity: 0.5 }
               ]}
               onPress={() => navigation.navigate('Attendance', { actionType: 'checkout' })}
               disabled={!todayStatus.checkin || !!todayStatus.checkout}
               activeOpacity={0.8}
             >
-              <Ionicons name="exit-outline" size={20} color="#0F172A" />
-              <Text style={styles.actionBtnText}>Check Out</Text>
+              <Ionicons name="exit-outline" size={20} color={(!todayStatus.checkin || todayStatus.checkout) ? theme.textSecondary : themeColors.primaryDark} />
+              <Text style={[styles.actionBtnText, { color: (!todayStatus.checkin || todayStatus.checkout) ? theme.textSecondary : themeColors.primaryDark }]}>Check Out</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Shift Info */}
-        <View style={styles.infoCard}>
+        <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.infoHeader}>
-            <Ionicons name="time-outline" size={20} color="#F59E0B" />
-            <Text style={styles.infoTitle}>Work Schedule</Text>
+            <Ionicons name="time-outline" size={20} color={themeColors.primary} />
+            <Text style={[styles.infoTitle, { color: theme.text }]}>Work Schedule</Text>
           </View>
-          <Text style={styles.infoBody}>Regular Shift (08:00 - 17:00)</Text>
-          <Text style={styles.infoSubtitle}>Wajib melakukan presensi wajah & GPS di sekitar area kantor.</Text>
+          <Text style={[styles.infoBody, { color: themeColors.primaryDark }]}>Regular Shift (08:00 - 17:00)</Text>
+          <Text style={[styles.infoSubtitle, { color: theme.textSecondary }]}>Wajib melakukan presensi wajah & GPS di sekitar area kantor.</Text>
         </View>
 
         {/* Quick Menu Grid */}
         <View style={styles.menuContainer}>
-          <Text style={styles.menuTitle}>Quick Actions</Text>
+          <Text style={[styles.menuTitle, { color: theme.textSecondary }]}>Quick Actions</Text>
           <View style={styles.menuGrid}>
             <TouchableOpacity 
-              style={styles.menuItemCard} 
+              style={[styles.menuItemCard, { backgroundColor: theme.card, borderColor: theme.border }]} 
               onPress={() => navigation.navigate('History')}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+              <View style={[styles.menuIconBg, { backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.15)' : '#EFF6FF' }]}>
                 <Ionicons name="calendar" size={22} color="#3B82F6" />
               </View>
-              <Text style={styles.menuItemText}>History</Text>
+              <Text style={[styles.menuItemText, { color: theme.text }]}>History</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.menuItemCard} 
+              style={[styles.menuItemCard, { backgroundColor: theme.card, borderColor: theme.border }]} 
               onPress={() => navigation.navigate('Request')}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+              <View style={[styles.menuIconBg, { backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F5F3FF' }]}>
                 <Ionicons name="document-text" size={22} color="#8B5CF6" />
               </View>
-              <Text style={styles.menuItemText}>Request</Text>
+              <Text style={[styles.menuItemText, { color: theme.text }]}>Request</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.menuItemCard} 
+              style={[styles.menuItemCard, { backgroundColor: theme.card, borderColor: theme.border }]} 
               onPress={() => navigation.navigate('Payroll')}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+              <View style={[styles.menuIconBg, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5' }]}>
                 <Ionicons name="wallet" size={22} color="#10B981" />
               </View>
-              <Text style={styles.menuItemText}>Payslip</Text>
+              <Text style={[styles.menuItemText, { color: theme.text }]}>Payslip</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.menuItemCard} 
+              style={[styles.menuItemCard, { backgroundColor: theme.card, borderColor: theme.border }]} 
               onPress={() => navigation.navigate('RegisterFace')}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconBg, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                <Ionicons name="scan-circle" size={22} color="#F59E0B" />
+              <View style={[styles.menuIconBg, { backgroundColor: themeColors.primaryLight }]}>
+                <Ionicons name="scan-circle" size={22} color={themeColors.primaryDark} />
               </View>
-              <Text style={styles.menuItemText}>Register</Text>
+              <Text style={[styles.menuItemText, { color: theme.text }]}>Register</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Recent History */}
         <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Recent Logs</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Logs</Text>
           
           {loading ? (
-            <ActivityIndicator size="small" color="#F59E0B" style={styles.loader} />
+            <ActivityIndicator size="small" color={themeColors.primary} style={styles.loader} />
           ) : history.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-outline" size={32} color="#475569" />
-              <Text style={styles.emptyText}>No attendance logs found yet.</Text>
+              <Ionicons name="calendar-outline" size={32} color={theme.textSecondary} />
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No attendance logs found yet.</Text>
             </View>
           ) : (
             history.map((log) => (
-              <View key={log.id} style={styles.logItem}>
+              <View key={log.id} style={[styles.logItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.logHeader}>
                   <View style={[
                     styles.logIcon,
-                    log.attendance_type === 'checkin' ? styles.inIcon : styles.outIcon
+                    { backgroundColor: theme.background },
+                    log.attendance_type === 'checkin' ? { borderColor: theme.successLight, borderWidth: 1 } : { borderColor: themeColors.primaryLight, borderWidth: 1 }
                   ]}>
                     <Ionicons
                       name={log.attendance_type === 'checkin' ? 'enter-outline' : 'exit-outline'}
                       size={18}
-                      color={log.attendance_type === 'checkin' ? '#10B981' : '#F59E0B'}
+                      color={log.attendance_type === 'checkin' ? theme.success : themeColors.primaryDark}
                     />
                   </View>
                   <View>
-                    <Text style={styles.logType}>
+                    <Text style={[styles.logType, { color: theme.text }]}>
                       {log.attendance_type === 'checkin' ? 'Check In' : 'Check Out'}
                     </Text>
-                    <Text style={styles.logDate}>{formatDate(log.scan_time)}</Text>
+                    <Text style={[styles.logDate, { color: theme.textSecondary }]}>{formatDate(log.scan_time)}</Text>
                   </View>
                 </View>
                 <View style={styles.logDetails}>
-                  <Text style={styles.logTimeText}>{formatTime(log.scan_time)}</Text>
-                  <View style={styles.statusBadge}>
-                    <Text style={styles.badgeText}>{log.status}</Text>
+                  <Text style={[styles.logTimeText, { color: theme.text }]}>{formatTime(log.scan_time)}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: log.status === 'Late' ? theme.dangerLight : theme.successLight }]}>
+                    <Text style={[styles.badgeText, { color: log.status === 'Late' ? theme.danger : theme.success }]}>{log.status}</Text>
                   </View>
                 </View>
               </View>
@@ -249,7 +261,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
   },
   scrollContent: {
     padding: 20,
@@ -272,15 +283,13 @@ const styles = StyleSheet.create({
   },
   menuItemCard: {
     flex: 1,
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 8,
     marginHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#334155',
   },
   menuIconBg: {
     width: 44,
@@ -291,7 +300,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   menuItemText: {
-    color: '#E2E8F0',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -299,28 +307,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F59E0B',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   avatarText: {
-    color: '#0F172A',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -328,40 +332,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   welcomeText: {
-    color: '#64748B',
-    fontSize: 12,
+    fontSize: 13,
   },
   nameText: {
-    color: '#F8FAFC',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: 'bold',
   },
   codeText: {
-    color: '#94A3B8',
     fontSize: 12,
     marginTop: 2,
+    fontWeight: 'bold',
   },
-  logoutButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
     padding: 8,
+    marginLeft: 4,
   },
   statusCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#334155',
     alignItems: 'center',
   },
   cardTitle: {
-    color: '#94A3B8',
     fontSize: 13,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   dateText: {
-    color: '#F8FAFC',
     fontSize: 18,
     fontWeight: 'bold',
     marginVertical: 10,
@@ -377,22 +380,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusLabel: {
-    color: '#64748B',
     fontSize: 12,
     marginBottom: 6,
   },
   statusTime: {
-    color: '#334155',
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  activeTime: {
-    color: '#F8FAFC',
   },
   statusDivider: {
     width: 1,
     height: 40,
-    backgroundColor: '#334155',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -405,33 +402,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
     marginHorizontal: 6,
   },
-  checkinBtn: {
-    backgroundColor: '#10B981', // Emerald 500
-  },
-  checkoutBtn: {
-    backgroundColor: '#F59E0B', // Amber 500
-  },
-  btnDisabled: {
-    backgroundColor: '#334155',
-    opacity: 0.5,
-  },
   actionBtnText: {
-    color: '#0F172A',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 15,
     marginLeft: 6,
   },
   infoCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   infoHeader: {
     flexDirection: 'row',
@@ -439,18 +423,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoTitle: {
-    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 8,
   },
   infoBody: {
-    color: '#F59E0B',
     fontSize: 15,
     fontWeight: 'bold',
   },
   infoSubtitle: {
-    color: '#64748B',
     fontSize: 12,
     marginTop: 4,
   },
@@ -458,7 +439,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sectionTitle: {
-    color: '#F8FAFC',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 16,
@@ -472,7 +452,6 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyText: {
-    color: '#475569',
     fontSize: 14,
     marginTop: 10,
   },
@@ -480,41 +459,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   logHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#0F172A',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  inIcon: {
-    borderColor: 'rgba(16, 185, 129, 0.2)',
-    borderWidth: 1,
-  },
-  outIcon: {
-    borderColor: 'rgba(245, 158, 11, 0.2)',
-    borderWidth: 1,
-  },
   logType: {
-    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: 'bold',
   },
   logDate: {
-    color: '#64748B',
     fontSize: 11,
     marginTop: 2,
   },
@@ -522,19 +488,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   logTimeText: {
-    color: '#F8FAFC',
     fontSize: 15,
     fontWeight: 'bold',
   },
   statusBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
     marginTop: 4,
   },
   badgeText: {
-    color: '#10B981',
     fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'uppercase',

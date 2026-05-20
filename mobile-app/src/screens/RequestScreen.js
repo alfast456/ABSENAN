@@ -5,9 +5,11 @@ import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { AuthContext, API_BASE_URL } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 
 export default function RequestScreen() {
   const { userToken } = useContext(AuthContext);
+  const { theme, themeColors, isDarkMode } = useContext(ThemeContext);
   
   const [requestType, setRequestType] = useState('permission');
   const [description, setDescription] = useState('');
@@ -86,9 +88,9 @@ export default function RequestScreen() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'approved': return '#10B981';
-      case 'rejected': return '#EF4444';
-      default: return '#F59E0B';
+      case 'approved': return theme.success;
+      case 'rejected': return theme.danger;
+      default: return theme.warning;
     }
   };
 
@@ -109,26 +111,26 @@ export default function RequestScreen() {
     });
 
     return (
-      <View style={styles.historyCard}>
+      <View style={[styles.historyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={styles.historyHeader}>
-          <Text style={styles.historyType}>{getTypeLabel(item.request_type)}</Text>
+          <Text style={[styles.historyType, { color: theme.text }]}>{getTypeLabel(item.request_type)}</Text>
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '1A', borderColor: statusColor }]}>
             <Text style={[styles.statusBadgeText, { color: statusColor }]}>{item.status.toUpperCase()}</Text>
           </View>
         </View>
-        <Text style={styles.historyDescription} numberOfLines={2}>{item.description}</Text>
+        <Text style={[styles.historyDescription, { color: theme.textSecondary }]} numberOfLines={2}>{item.description}</Text>
         {item.start_date && item.end_date && (
-          <Text style={styles.historyDates}>
+          <Text style={[styles.historyDates, { color: themeColors.primary }]}>
             {item.start_date} s/d {item.end_date}
           </Text>
         )}
-        <Text style={styles.historyDate}>Dibuat pada: {date}</Text>
+        <Text style={[styles.historyDate, { color: theme.textSecondary }]}>Dibuat pada: {date}</Text>
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Scrollable Layout */}
       <FlatList
         data={history}
@@ -137,45 +139,57 @@ export default function RequestScreen() {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Submit New Request</Text>
+            <Text style={[styles.formTitle, { color: theme.text }]}>Submit New Request</Text>
             
             {/* Type Selector */}
-            <Text style={styles.inputLabel}>Request Type</Text>
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Request Type</Text>
             <View style={styles.selectorGrid}>
               <TouchableOpacity 
-                style={[styles.selectorCard, requestType === 'permission' ? styles.selectorActive : null]}
+                style={[
+                  styles.selectorCard, 
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                  requestType === 'permission' ? { backgroundColor: themeColors.primary, borderColor: themeColors.primary } : null
+                ]}
                 onPress={() => setRequestType('permission')}
               >
-                <Ionicons name="document-text-outline" size={20} color={requestType === 'permission' ? '#0F172A' : '#94A3B8'} />
-                <Text style={[styles.selectorText, requestType === 'permission' ? styles.selectorTextActive : null]}>Izin</Text>
+                <Ionicons name="document-text-outline" size={20} color={requestType === 'permission' ? '#FFFFFF' : theme.iconColor} />
+                <Text style={[styles.selectorText, { color: theme.textSecondary }, requestType === 'permission' ? { color: '#FFFFFF' } : null]}>Izin</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={[styles.selectorCard, requestType === 'sick' ? styles.selectorActive : null]}
+                style={[
+                  styles.selectorCard, 
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                  requestType === 'sick' ? { backgroundColor: themeColors.primary, borderColor: themeColors.primary } : null
+                ]}
                 onPress={() => setRequestType('sick')}
               >
-                <Ionicons name="bandage-outline" size={20} color={requestType === 'sick' ? '#0F172A' : '#94A3B8'} />
-                <Text style={[styles.selectorText, requestType === 'sick' ? styles.selectorTextActive : null]}>Sakit</Text>
+                <Ionicons name="bandage-outline" size={20} color={requestType === 'sick' ? '#FFFFFF' : theme.iconColor} />
+                <Text style={[styles.selectorText, { color: theme.textSecondary }, requestType === 'sick' ? { color: '#FFFFFF' } : null]}>Sakit</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={[styles.selectorCard, requestType === 'leave' ? styles.selectorActive : null]}
+                style={[
+                  styles.selectorCard, 
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                  requestType === 'leave' ? { backgroundColor: themeColors.primary, borderColor: themeColors.primary } : null
+                ]}
                 onPress={() => setRequestType('leave')}
               >
-                <Ionicons name="briefcase-outline" size={20} color={requestType === 'leave' ? '#0F172A' : '#94A3B8'} />
-                <Text style={[styles.selectorText, requestType === 'leave' ? styles.selectorTextActive : null]}>Cuti</Text>
+                <Ionicons name="briefcase-outline" size={20} color={requestType === 'leave' ? '#FFFFFF' : theme.iconColor} />
+                <Text style={[styles.selectorText, { color: theme.textSecondary }, requestType === 'leave' ? { color: '#FFFFFF' } : null]}>Cuti</Text>
               </TouchableOpacity>
             </View>
 
             {/* Date Inputs */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={styles.inputLabel}>Start Date</Text>
+                <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Start Date</Text>
                 <TouchableOpacity 
-                  style={styles.datePickerBtn}
+                  style={[styles.datePickerBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
                   onPress={() => setShowStartPicker(true)}
                 >
-                  <Text style={[styles.dateText, !startDate && { color: '#475569' }]}>
+                  <Text style={[styles.dateText, { color: startDate ? theme.text : theme.textSecondary }]}>
                     {startDate || 'Select Date'}
                   </Text>
                 </TouchableOpacity>
@@ -189,12 +203,12 @@ export default function RequestScreen() {
                 )}
               </View>
               <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.inputLabel}>End Date</Text>
+                <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>End Date</Text>
                 <TouchableOpacity 
-                  style={styles.datePickerBtn}
+                  style={[styles.datePickerBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
                   onPress={() => setShowEndPicker(true)}
                 >
-                  <Text style={[styles.dateText, !endDate && { color: '#475569' }]}>
+                  <Text style={[styles.dateText, { color: endDate ? theme.text : theme.textSecondary }]}>
                     {endDate || 'Select Date'}
                   </Text>
                 </TouchableOpacity>
@@ -211,45 +225,45 @@ export default function RequestScreen() {
             </View>
 
             {/* Description Text Input */}
-            <Text style={styles.inputLabel}>Reason / Description</Text>
+            <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Reason / Description</Text>
             <TextInput
-              style={styles.textAreaInput}
+              style={[styles.textAreaInput, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
               multiline
               numberOfLines={4}
               placeholder="Provide a detailed explanation for your request..."
-              placeholderTextColor="#475569"
+              placeholderTextColor={theme.textSecondary}
               value={description}
               onChangeText={setDescription}
             />
 
             {/* Submit Button */}
             <TouchableOpacity 
-              style={styles.submitBtn} 
+              style={[styles.submitBtn, { backgroundColor: themeColors.primary, shadowColor: themeColors.primary }]} 
               onPress={handleSubmit}
               disabled={submitting}
               activeOpacity={0.8}
             >
               {submitting ? (
-                <ActivityIndicator size="small" color="#0F172A" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons name="paper-plane" size={18} color="#0F172A" />
+                  <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
                   <Text style={styles.submitBtnText}>Submit Request</Text>
                 </>
               )}
             </TouchableOpacity>
 
             {/* History Section Divider */}
-            <Text style={styles.sectionDividerHeader}>Request History</Text>
+            <Text style={[styles.sectionDividerHeader, { color: theme.textSecondary }]}>Request History</Text>
           </View>
         }
         ListFooterComponent={
           fetchingHistory ? (
-            <ActivityIndicator size="small" color="#F59E0B" style={styles.loader} />
+            <ActivityIndicator size="small" color={themeColors.primary} style={styles.loader} />
           ) : history.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="documents-outline" size={32} color="#475569" />
-              <Text style={styles.emptyText}>No permission requests submitted yet.</Text>
+              <Ionicons name="documents-outline" size={32} color={theme.textSecondary} />
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No permission requests submitted yet.</Text>
             </View>
           ) : null
         }
@@ -262,7 +276,6 @@ export default function RequestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
   },
   scrollContent: {
     padding: 16,
@@ -272,13 +285,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   formTitle: {
-    color: '#F8FAFC',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
   },
   inputLabel: {
-    color: '#94A3B8',
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -295,81 +306,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1E293B',
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
     marginHorizontal: 4,
     borderWidth: 1,
-    borderColor: '#334155',
-  },
-  selectorActive: {
-    backgroundColor: '#F59E0B',
-    borderColor: '#F59E0B',
   },
   selectorText: {
-    color: '#94A3B8',
     fontSize: 13,
     fontWeight: '700',
     marginLeft: 6,
   },
-  selectorTextActive: {
-    color: '#0F172A',
-  },
-  textInput: {
-    backgroundColor: '#1E293B',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#334155',
-    color: '#F8FAFC',
-    padding: 12,
-    fontSize: 14,
-  },
   datePickerBtn: {
-    backgroundColor: '#1E293B',
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
-    padding: 12,
-    height: 48,
+    padding: 14,
+    height: 52,
     justifyContent: 'center',
   },
   dateText: {
-    color: '#F8FAFC',
     fontSize: 14,
   },
   textAreaInput: {
-    backgroundColor: '#1E293B',
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
-    color: '#F8FAFC',
-    padding: 12,
+    padding: 14,
     fontSize: 14,
-    minHeight: 100,
+    minHeight: 120,
     textAlignVertical: 'top',
     marginBottom: 20,
   },
   submitBtn: {
     flexDirection: 'row',
-    backgroundColor: '#F59E0B',
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#F59E0B',
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   submitBtnText: {
-    color: '#0F172A',
+    color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 16,
     marginLeft: 8,
   },
   sectionDividerHeader: {
-    color: '#94A3B8',
     fontSize: 12,
     fontWeight: 'bold',
     textTransform: 'uppercase',
@@ -379,48 +362,42 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   historyCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   historyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   historyType: {
-    color: '#F8FAFC',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 1,
   },
   statusBadgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   historyDescription: {
-    color: '#94A3B8',
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 8,
   },
   historyDates: {
-    color: '#F59E0B',
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 6,
   },
   historyDate: {
-    color: '#64748B',
     fontSize: 11,
   },
   loader: {
@@ -432,7 +409,6 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyText: {
-    color: '#475569',
     fontSize: 13,
     marginTop: 10,
   },

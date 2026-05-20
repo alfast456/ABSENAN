@@ -2,6 +2,8 @@ import React, { useState, useContext } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const [employeeCode, setEmployeeCode] = useState('');
@@ -10,6 +12,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const { login } = useContext(AuthContext);
+  const { theme, themeColors, isDarkMode } = useContext(ThemeContext);
 
   const handleLogin = async () => {
     if (!employeeCode.trim() || !password) {
@@ -29,59 +32,67 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>ABSENAN</Text>
-            <Text style={styles.subtitle}>Face Recognition & GPS Attendance System</Text>
+            <Text style={[styles.title, { color: theme.text, textShadowColor: isDarkMode ? 'rgba(25, 194, 243, 0.4)' : 'rgba(25, 194, 243, 0.2)' }]}>
+              ABSENAN
+            </Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Face Recognition & GPS Attendance</Text>
           </View>
 
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Sign In</Text>
+          <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: isDarkMode ? '#000' : '#CBD5E1' }]}>
+            <Text style={[styles.formTitle, { color: theme.text }]}>Sign In</Text>
             
             {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.errorBox, { backgroundColor: theme.dangerLight, borderColor: theme.danger }]}>
+                <Text style={[styles.errorText, { color: theme.danger }]}>{error}</Text>
               </View>
             ) : null}
 
-            <Text style={styles.label}>Employee ID</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. EMP001"
-              placeholderTextColor="#64748B"
-              value={employeeCode}
-              onChangeText={setEmployeeCode}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Employee ID</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9', borderColor: theme.border }]}>
+              <Ionicons name="person-outline" size={20} color={theme.iconColor} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { color: theme.text }]}
+                placeholder="e.g. EMP001"
+                placeholderTextColor={theme.textSecondary}
+                value={employeeCode}
+                onChangeText={setEmployeeCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
 
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="••••••••"
-              placeholderTextColor="#64748B"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <Text style={[styles.label, { color: theme.textSecondary }]}>Password</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: isDarkMode ? '#0F172A' : '#F1F5F9', borderColor: theme.border }]}>
+              <Ionicons name="lock-closed-outline" size={20} color={theme.iconColor} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { color: theme.text }]}
+                placeholder="••••••••"
+                placeholderTextColor={theme.textSecondary}
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
 
             <TouchableOpacity 
-              style={[styles.button, loading && styles.buttonDisabled]} 
+              style={[styles.button, { backgroundColor: themeColors.primary, shadowColor: themeColors.primary }, loading && styles.buttonDisabled]} 
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.8}
             >
               {loading ? (
-                <ActivityIndicator color="#0F172A" />
+                <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text style={styles.buttonText}>Log In</Text>
               )}
@@ -96,7 +107,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
   },
   keyboardView: {
     flex: 1,
@@ -113,77 +123,69 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 40,
     fontWeight: '900',
-    color: '#F8FAFC',
     letterSpacing: 4,
-    textShadowColor: 'rgba(245, 158, 11, 0.4)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 10,
   },
   subtitle: {
-    color: '#64748B',
     fontSize: 12,
     textAlign: 'center',
     marginTop: 8,
     letterSpacing: 0.5,
   },
   formContainer: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 24,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 8,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   formTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#F8FAFC',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   errorText: {
-    color: '#F87171',
     fontSize: 13,
     fontWeight: '500',
   },
   label: {
-    color: '#94A3B8',
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  input: {
-    backgroundColor: '#0F172A',
-    borderColor: '#334155',
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: '#F8FAFC',
-    fontSize: 15,
+    borderRadius: 12,
     marginBottom: 20,
+    paddingHorizontal: 12,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: '#F59E0B', // Amber 500
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
-    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: '#0F172A',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 0.5,

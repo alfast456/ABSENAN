@@ -22,7 +22,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $employee->createToken('mobile-app')->plainTextToken;
+        $deviceName = $request->header('User-Agent', 'mobile-app');
+        $token = $employee->createToken($deviceName)->plainTextToken;
 
         return response()->json([
             'token' => $token,
